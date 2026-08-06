@@ -521,7 +521,7 @@ export default function TapAI() {
       </div>
 
       {/* Input controls bar — TYPE OR TALK */}
-      <div className="px-3 py-3 border-t border-white/5 bg-card-dark flex items-center gap-2 flex-shrink-0">
+      <div className="px-3 py-3 border-t border-white/10 bg-card-dark flex items-center gap-2 flex-shrink-0 mb-[76px] relative z-20">
         {/* Voice mic button for Voice Message / ГС */}
         <motion.button
           onClick={toggleListening}
