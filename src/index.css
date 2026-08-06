@@ -1,0 +1,145 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+@import 'leaflet/dist/leaflet.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Reset ─────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body, #root { height: 100%; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+
+/* ── App Shell ─────────────────────────────────────────────── */
+body {
+  background: #1a1f2b;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  min-height: 100%;
+  overflow-x: hidden;
+}
+
+#root {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+/* Desktop: phone frame */
+@media (min-width: 520px) {
+  body {
+    padding: 28px 0 40px;
+    align-items: flex-start;
+  }
+  #root {
+    align-items: flex-start;
+    padding-top: 0;
+  }
+  .tap-screen {
+    width: 390px !important;
+    height: 844px !important;
+    border-radius: 44px !important;
+    box-shadow: 0 40px 80px rgba(0,0,0,0.55), 0 0 0 8px #0F141C !important;
+    overflow: hidden !important;
+  }
+}
+
+/* ── Tap Screen ────────────────────────────────────────────── */
+.tap-screen {
+  width: 100vw;
+  height: 100dvh;
+  background: #0F141C;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── Bottom Nav ────────────────────────────────────────────── */
+.bottom-nav {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 74px;
+  background: rgba(15, 20, 28, 0.96);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(255,255,255,0.05);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 8px 10px;
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  min-width: 64px;
+}
+
+/* ── Buttons ───────────────────────────────────────────────── */
+.tap-btn-primary {
+  @apply py-4 px-6 rounded-[28px] bg-blazing-orange text-white font-black text-sm
+    flex items-center justify-center gap-2 transition-all active:scale-95;
+  box-shadow: 0 6px 24px rgba(255, 90, 0, 0.40);
+}
+
+.tap-btn-ghost {
+  @apply w-full py-3.5 rounded-2xl border border-white/10 text-text-muted font-semibold text-sm
+    flex items-center justify-center gap-2 transition-colors hover:bg-card-light hover:text-white;
+}
+
+.tap-btn-outline {
+  @apply w-full py-3.5 rounded-2xl border border-glacial-cyan/30 text-glacial-cyan font-semibold text-sm
+    flex items-center justify-center gap-2 transition-colors hover:bg-glacial-cyan/10;
+}
+
+/* ── Filter chips ──────────────────────────────────────────── */
+.filter-chip {
+  @apply flex-shrink-0 px-4 py-2 rounded-2xl text-sm font-semibold transition-all whitespace-nowrap;
+}
+.filter-chip-active {
+  @apply bg-blazing-orange text-white;
+  box-shadow: 0 4px 16px rgba(255, 90, 0, 0.35);
+}
+.filter-chip-idle  { @apply bg-card-dark text-text-muted border border-white/5; }
+
+/* ── Tap card ──────────────────────────────────────────────── */
+.tap-card {
+  @apply bg-card-dark rounded-[28px] p-5 border border-white/5;
+}
+
+/* ── Scrollbar hide ────────────────────────────────────────── */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ── Leaflet overrides ──────────────────────────────────────── */
+.leaflet-container { background: #1a2535; font-family: 'Inter', sans-serif; }
+.leaflet-popup-content-wrapper {
+  background: #161C27;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  color: #F3F5F8;
+}
+.leaflet-popup-tip { background: #161C27; }
+.leaflet-popup-close-button { color: #8A94A6 !important; }
+
+/* ── Safe area ─────────────────────────────────────────────── */
+.pt-safe { padding-top: env(safe-area-inset-top, 0px); }
+.pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
+
+/* ── Animations ─────────────────────────────────────────────── */
+@keyframes tap-pulse {
+  0%   { transform: scale(0.95); opacity: 0.7; }
+  70%  { transform: scale(1.6);  opacity: 0; }
+  100% { transform: scale(1.6);  opacity: 0; }
+}
