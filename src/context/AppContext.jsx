@@ -43,6 +43,18 @@ function reducer(state, action) {
       localStorage.setItem('tap_partner_type', action.payload);
       return { ...state, partnerType: action.payload };
 
+    case 'REGISTER_TOURIST':
+      return {
+        ...state,
+        user: { ...state.user, ...action.payload },
+      };
+
+    case 'REGISTER_PARTNER':
+      return {
+        ...state,
+        partnerUser: { ...state.partnerUser, ...action.payload },
+      };
+
     // ── Pending chat navigation ───────────────────────────────
     case 'OPEN_CHAT':
       return { ...state, pendingChat: action.payload };

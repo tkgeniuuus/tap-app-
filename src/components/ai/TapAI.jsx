@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Sparkles, RotateCcw, MapPin, Clock, Wallet } from 'lucide-react';
+import { Send, Sparkles, RotateCcw, Mic, MicOff, Volume2, VolumeX, Radio } from 'lucide-react';
 
 /* ── Knowledge base ──────────────────────────────────────────── */
 const DESTINATIONS = {
@@ -58,11 +58,10 @@ const QUICK_PROMPTS = [
   { text: 'Charyn Canyon day trip from Almaty', emoji: '🏜️' },
 ];
 
-/* ── AI Engine ───────────────────────────────────────────────── */
+/* ── AI Intelligence Engine ───────────────────────────────────── */
 function generateResponse(input) {
   const q = input.toLowerCase();
 
-  // ── Detect destination
   let dest = null;
   if (q.includes('kolsai') || q.includes('кольсай'))             dest = DESTINATIONS.kolsai;
   else if (q.includes('charyn') || q.includes('чарын'))          dest = DESTINATIONS.charyn;
@@ -70,20 +69,16 @@ function generateResponse(input) {
   else if (q.includes('altyn') || q.includes('алтын'))           dest = DESTINATIONS.altyn;
   else if (q.includes('burkhan') || q.includes('бурхан'))        dest = DESTINATIONS.burkhan;
 
-  // ── Detect duration
   const durMatch = q.match(/(\d+)\s*(?:day|дн|ночи|night)/);
   const days = durMatch ? parseInt(durMatch[1]) : 3;
 
-  // ── Detect group size
   const grpMatch = q.match(/(\d+)\s*(?:people|person|чел|человек)/);
   const people = grpMatch ? parseInt(grpMatch[1]) : 2;
 
-  // ── Detect budget
   const budMatch = q.match(/(\d[\d\s]*)\s*(?:₸|tg|тг|тенге|k\b)/i);
   let budget = budMatch ? parseInt(budMatch[1].replace(/\s/g, '')) : null;
   if (budget && q.includes('k')) budget *= 1000;
 
-  // ── "Best places" / general query
   if (!dest && (q.includes('best') || q.includes('where') || q.includes('recommend') || q.includes('лучш'))) {
     return `## 🇰🇿 Top Destinations in Kazakhstan
 
@@ -98,7 +93,6 @@ Here are the must-visit spots TAP recommends:
 Tell me which one interests you and I'll plan the full trip! 🗺️`;
   }
 
-  // ── Budget-only query
   if (!dest && budget) {
     const perPerson = Math.round(budget / people);
     return `## 💰 Budget Trip Plan — ${budget.toLocaleString('ru')} ₸ for ${people} people
@@ -126,7 +120,6 @@ ${perPerson < 20000
 Want me to build a full day-by-day itinerary? Just say which destination! 🎯`;
   }
 
-  // ── Full trip plan for a specific destination
   if (dest) {
     const transportCost = parseInt(dest.transport.match(/[\d,]+/)?.[0] || '15000');
     const accomCost     = parseInt(dest.accommodation[0].match(/[\d,]+/)?.[0] || '12000');
@@ -175,26 +168,13 @@ ${itinerary}
 ### 💡 Pro Tips
 ${dest.tips}
 
-### 🛒 Pack from TAP Market
-• Sleeping bag, tent, trekking poles — available to rent!
-
 Ready to book? I can find available transport and accommodation on TAP right now! 🚀`;
   }
 
-  // ── Greeting
   if (q.match(/^(hi|hello|hey|привет|сәлем)/)) {
-    return `Hey! 👋 I'm **TAP AI** — your Kazakhstan travel assistant.
-
-I can help you:
-• 🗺️ **Plan any trip** — just tell me where & when
-• 💰 **Find options for your budget**
-• 📦 **Build a packing list**
-• 🏨 **Compare accommodation & transport**
-
-Where do you want to go? 🌄`;
+    return `Hey! 👋 I'm **TAP AI** — your Kazakhstan travel assistant.\n\nI can plan trips, estimate budgets, recommend hotels or drivers, and build packing lists. You can **type or talk to me by voice (гс)** anytime! 🎙️\n\nWhere do you want to go? 🌄`;
   }
 
-  // ── Packing list
   if (q.includes('pack') || q.includes('bring') || q.includes('gear') || q.includes('взять')) {
     return `## 🎒 Essential Packing List for Kazakhstan Mountains
 
@@ -202,45 +182,40 @@ Where do you want to go? 🌄`;
 • Warm jacket (nights can be cold even in summer)
 • Rain jacket / poncho
 • Hiking boots with ankle support
-• Thermal base layer
-• Hat, gloves (above 2000m)
 
 **Gear**
 • Tent + sleeping bag (rated to +5°C minimum)
 • 30–40L backpack
 • Trekking poles
-• Headlamp + extra batteries
-• Water filter or purification tablets
 
 **Health & Safety**
 • Sunscreen SPF 50+
-• Altitude sickness pills (Acetazolamide)
 • First aid kit
 • Emergency whistle
-
-**Documents**
-• ID / Passport
-• TAP QR code (your bookings)
-• Emergency contacts saved offline
 
 🛒 You can rent tents, sleeping bags & trekking poles directly from TAP Market!`;
   }
 
-  // ── Default fallback
-  return `I'm here to help plan your Kazakhstan adventure! 🌄
+  return `I'm TAP AI, ready to assist your Kazakhstan journey! 🌄\n\nYou can ask me by **typing or speaking (voice/гс)**:\n• *"Plan a 3-day trip to Kolsai for 2 people"*\n• *"Best places to visit in summer"*\n• *"Budget trip for 4 people, 80,000 ₸"*\n\nWhere shall we explore? 🗺️`;
+}
 
-Try asking me:
-• *"Plan a 3-day trip to Kolsai for 2 people"*
-• *"Best places to visit in summer"*
-• *"Budget trip for 4 people, 80,000 ₸"*
-• *"What to pack for mountains?"*
-
-Where would you like to go? 🗺️`;
+/* ── Clean text for Speech Synthesis ──────────────────────────── */
+function cleanTextForSpeech(md) {
+  return md
+    .replace(/## /g, '')
+    .replace(/\*\*/g, '')
+    .replace(/### /g, '')
+    .replace(/• /g, ', ')
+    .replace(/\|/g, '')
+    .replace(/₸/g, 'tenge')
+    .replace(/---\s*/g, '');
 }
 
 /* ── Message bubble ──────────────────────────────────────────── */
-function Bubble({ msg }) {
+function Bubble({ msg, onSpeak, speakingId }) {
   const isMe = msg.from === 'user';
+  const isSpeaking = speakingId === msg.id;
+
   return (
     <div className={`flex items-end gap-2 mb-4 ${isMe ? 'justify-end' : 'justify-start'}`}>
       {!isMe && (
@@ -259,15 +234,35 @@ function Bubble({ msg }) {
           isMe
             ? 'bg-blazing-orange text-white rounded-br-sm'
             : 'bg-card-mid text-text-light rounded-bl-sm'
-        }`}
-          dangerouslySetInnerHTML={{ __html: msg.text
-            .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-            .replace(/## (.+)/g, '<p class="font-black text-white text-base mb-1">$1</p>')
-            .replace(/### (.+)/g, '<p class="font-bold text-white mt-2 mb-1">$1</p>')
-            .replace(/\| (.+) \|/g, (m) => `<span class="font-mono text-xs">${m}</span>`)
-          }}
-        />
-        <span className="text-[10px] text-text-muted mt-1 mx-1">{msg.time}</span>
+        }`}>
+          {msg.isVoice && (
+            <div className="flex items-center gap-1.5 text-xs text-glacial-cyan font-semibold mb-1">
+              <Radio size={12} className="animate-pulse" /> Voice message (ГС)
+            </div>
+          )}
+          <div dangerouslySetInnerHTML={{
+            __html: msg.text
+              .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+              .replace(/## (.+)/g, '<p class="font-black text-white text-base mb-1">$1</p>')
+              .replace(/### (.+)/g, '<p class="font-bold text-white mt-2 mb-1">$1</p>')
+              .replace(/\| (.+) \|/g, (m) => `<span class="font-mono text-xs">${m}</span>`)
+          }} />
+        </div>
+
+        <div className="flex items-center gap-2 mt-1 mx-1">
+          <span className="text-[10px] text-text-muted">{msg.time}</span>
+          {!isMe && (
+            <button
+              onClick={() => onSpeak(msg)}
+              className={`text-xs p-1 rounded-full hover:bg-card-light transition-colors ${
+                isSpeaking ? 'text-glacial-cyan font-bold animate-bounce' : 'text-text-muted'
+              }`}
+              title="Listen voice answer"
+            >
+              {isSpeaking ? <VolumeX size={13} /> : <Volume2 size={13} />}
+            </button>
+          )}
+        </div>
       </motion.div>
     </div>
   );
@@ -300,20 +295,95 @@ export default function TapAI() {
   const [messages, setMessages] = useState([
     {
       id: 0, from: 'ai', time: now(),
-      text: `Hey! 👋 I'm **TAP AI** — your Kazakhstan travel assistant.\n\nTell me where you want to go and I'll plan the perfect trip — routes, budget, accommodation, packing list, everything. 🌄\n\nWhere are we headed?`,
+      text: `Hey! 👋 I'm **TAP AI** — your Kazakhstan travel assistant.\n\nYou can **type or talk to me using voice (гс / voice message)**! Ask me about routes, budget, packing, or hotels. 🌄`,
     },
   ]);
-  const [input,  setInput]  = useState('');
+  const [input, setInput] = useState('');
   const [typing, setTyping] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [speakingId, setSpeakingId] = useState(null);
+
   const bottomRef = useRef(null);
+  const recognitionRef = useRef(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, typing]);
+  }, [messages, typing, isListening]);
 
-  const send = (text = input.trim()) => {
+  // Setup Web Speech Recognition if available
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      const rec = new SpeechRecognition();
+      rec.continuous = false;
+      rec.interimResults = true;
+      rec.lang = 'en-US';
+
+      rec.onresult = (event) => {
+        const transcript = Array.from(event.results)
+          .map(r => r[0].transcript)
+          .join('');
+        setInput(transcript);
+      };
+
+      rec.onerror = (event) => {
+        console.error('Speech recognition error', event.error);
+        setIsListening(false);
+      };
+
+      rec.onend = () => {
+        setIsListening(false);
+      };
+
+      recognitionRef.current = rec;
+    }
+  }, []);
+
+  const toggleListening = () => {
+    if (!recognitionRef.current) {
+      // Fallback if browser blocks API: Simulated voice input prompt
+      const simVoice = prompt("🎙️ Voice Input (ГС): Speak or type your request below:", "Plan a 3-day Kolsai trip for 2 people");
+      if (simVoice) {
+        send(simVoice, true);
+      }
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    } else {
+      setInput('');
+      setIsListening(true);
+      try {
+        recognitionRef.current.start();
+      } catch (err) {
+        console.error(err);
+        setIsListening(false);
+      }
+    }
+  };
+
+  const speakMessage = (msg) => {
+    if (!('speechSynthesis' in window)) return;
+    if (speakingId === msg.id) {
+      window.speechSynthesis.cancel();
+      setSpeakingId(null);
+      return;
+    }
+    window.speechSynthesis.cancel();
+    const cleanText = cleanTextForSpeech(msg.text);
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.lang = 'en-US';
+    utterance.onend = () => setSpeakingId(null);
+    utterance.onerror = () => setSpeakingId(null);
+    setSpeakingId(msg.id);
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const send = (text = input.trim(), isVoice = false) => {
     if (!text) return;
-    const userMsg = { id: ++msgId, from: 'user', time: now(), text };
+    const userMsg = { id: ++msgId, from: 'user', time: now(), text, isVoice };
     setMessages(prev => [...prev, userMsg]);
     setInput('');
     setTyping(true);
@@ -322,17 +392,25 @@ export default function TapAI() {
     setTimeout(() => {
       const reply = generateResponse(text);
       setTyping(false);
-      setMessages(prev => [...prev, { id: ++msgId, from: 'ai', time: now(), text: reply }]);
+      const aiMsg = { id: ++msgId, from: 'ai', time: now(), text: reply };
+      setMessages(prev => [...prev, aiMsg]);
+
+      // If user used voice input, auto-read AI response aloud
+      if (isVoice) {
+        speakMessage(aiMsg);
+      }
     }, delay);
   };
 
   const reset = () => {
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
     setMessages([{
       id: ++msgId, from: 'ai', time: now(),
-      text: `Hey! 👋 I'm **TAP AI** — your Kazakhstan travel assistant.\n\nTell me where you want to go and I'll plan the perfect trip! 🌄`,
+      text: `Hey! 👋 I'm **TAP AI** — your Kazakhstan travel assistant.\n\nType or speak by voice (гс) to plan your next trip! 🌄`,
     }]);
     setInput('');
     setTyping(false);
+    setSpeakingId(null);
   };
 
   return (
@@ -346,7 +424,7 @@ export default function TapAI() {
           </div>
           <div>
             <p className="text-white font-black text-sm">TAP AI</p>
-            <p className="text-glacial-cyan text-[10px]">Kazakhstan Travel Assistant</p>
+            <p className="text-glacial-cyan text-[10px]">Voice & Text Travel Assistant (ГС)</p>
           </div>
         </div>
         <motion.button onClick={reset} whileTap={{ scale: 0.88 }}
@@ -355,7 +433,7 @@ export default function TapAI() {
         </motion.button>
       </div>
 
-      {/* Quick prompts (show only at start) */}
+      {/* Quick prompts */}
       {messages.length <= 1 && (
         <div className="px-4 pt-3 flex flex-col gap-2 flex-shrink-0">
           <p className="text-text-muted text-xs font-semibold uppercase tracking-wide mb-1">Quick start</p>
@@ -374,31 +452,74 @@ export default function TapAI() {
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-3">
-        {messages.map(msg => <Bubble key={msg.id} msg={msg} />)}
+        {messages.map(msg => (
+          <Bubble key={msg.id} msg={msg} onSpeak={speakMessage} speakingId={speakingId} />
+        ))}
         <AnimatePresence>
           {typing && <motion.div key="typing"
             initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
             <TypingDots />
           </motion.div>}
         </AnimatePresence>
+
+        {/* Listening Active Waves */}
+        <AnimatePresence>
+          {isListening && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
+              className="bg-card-dark border border-blazing-orange/40 rounded-2xl p-3 mb-4 flex items-center gap-3"
+            >
+              <div className="w-9 h-9 rounded-full bg-blazing-orange flex items-center justify-center animate-pulse">
+                <Mic size={18} className="text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-white text-xs font-bold flex items-center gap-1.5">
+                  Listening to your voice... (Говорите)
+                  <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
+                </p>
+                <p className="text-text-muted text-[11px] truncate">
+                  {input || "Speak now into your microphone..."}
+                </p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <div ref={bottomRef} className="h-1" />
       </div>
 
-      {/* Input */}
+      {/* Input controls bar */}
       <div className="px-3 py-3 border-t border-white/5 bg-card-dark flex items-center gap-2 flex-shrink-0">
-        <div className="flex-1 flex items-center gap-2 bg-card-mid rounded-2xl px-4 py-3
+        {/* Voice mic button */}
+        <motion.button
+          onClick={toggleListening}
+          whileTap={{ scale: 0.85 }}
+          className={`w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 transition-all ${
+            isListening
+              ? 'bg-red-500 text-white animate-pulse shadow-lg'
+              : 'bg-card-mid text-text-light hover:text-blazing-orange border border-white/8'
+          }`}
+          title={isListening ? "Stop listening" : "Speak by voice (ГС)"}
+        >
+          {isListening ? <MicOff size={18} /> : <Mic size={18} />}
+        </motion.button>
+
+        {/* Text field */}
+        <div className="flex-1 flex items-center gap-2 bg-card-mid rounded-2xl px-4 py-2.5
           border border-white/8 focus-within:border-blazing-orange/40 transition-colors">
           <input
             value={input}
             onChange={e => setInput(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
-            placeholder="Ask anything about travel in Kazakhstan..."
+            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(input.trim(), isListening); } }}
+            placeholder={isListening ? "Transcribing voice..." : "Type or speak by voice (гс)..."}
             className="flex-1 bg-transparent text-white text-sm outline-none placeholder-text-muted"
           />
         </div>
-        <motion.button onClick={() => send()} disabled={!input.trim()} whileTap={{ scale: 0.85 }}
+
+        {/* Send button */}
+        <motion.button onClick={() => send(input.trim(), isListening)} disabled={!input.trim()} whileTap={{ scale: 0.85 }}
           className={`w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 transition-all ${
-            input.trim() ? 'bg-blazing-orange text-white' : 'bg-card-mid text-text-muted'
+            input.trim() ? 'bg-blazing-orange text-white shadow-orange' : 'bg-card-mid text-text-muted'
           }`}>
           <Send size={16} />
         </motion.button>
