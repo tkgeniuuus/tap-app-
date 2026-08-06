@@ -25,6 +25,7 @@ function TagBadge({ tag }) {
 
 // ─── Chat button (links to partner DM) ────────────────────────
 function ChatBtn({ service, onChatWith }) {
+  const { t } = useLang();
   if (!service.partnerChatId || !onChatWith) return null;
   return (
     <motion.button
@@ -35,7 +36,7 @@ function ChatBtn({ service, onChatWith }) {
         hover:bg-glacial-cyan/10"
     >
       <MessageCircle size={13} />
-      Написать
+      {t.messagePartner || 'Message'}
     </motion.button>
   );
 }
@@ -74,7 +75,7 @@ function TransportCard({ service, onBook, onChatWith }) {
         <div className="flex justify-between text-xs mb-1.5">
           <span className="text-text-muted">{service.bookedSeats}/{service.totalSeats} {t.seatsLeft}</span>
           <span className={`font-bold ${full ? 'text-red-400' : 'text-glacial-cyan'}`}>
-            {full ? 'Нет мест' : `${available} свободно`}
+            {full ? (t.noSeats || 'No seats') : `${available} ${t.availableSeats || 'free'}`}
           </span>
         </div>
         <SeatBar booked={service.bookedSeats} total={service.totalSeats} />
@@ -82,7 +83,7 @@ function TransportCard({ service, onBook, onChatWith }) {
       <div className="flex gap-2">
         <motion.button onClick={() => !full && onBook(service)} disabled={full} whileTap={full ? {} : { scale: 0.97 }}
           className={`flex-1 py-3 rounded-2xl text-sm font-bold ${full ? 'bg-card-light text-text-muted' : 'bg-blazing-orange text-white shadow-orange'}`}>
-          {full ? '🚫 Мест нет' : t.bookNow}
+          {full ? `🚫 ${t.noSeats || 'Full'}` : t.bookNow}
         </motion.button>
         <ChatBtn service={service} onChatWith={onChatWith} />
       </div>
@@ -250,7 +251,7 @@ function BookingModal({ service, open, onClose, onChatWith }) {
             {service.partnerChatId && (
               <motion.button onClick={goToChat} whileTap={{ scale: 0.97 }}
                 className="py-4 px-4 rounded-2xl border border-glacial-cyan/30 text-glacial-cyan font-semibold text-sm flex items-center gap-1.5">
-                <MessageCircle size={15} /> Спросить
+                <MessageCircle size={15} /> {t.askPartner || 'Ask Partner'}
               </motion.button>
             )}
           </div>
@@ -262,7 +263,7 @@ function BookingModal({ service, open, onClose, onChatWith }) {
             <motion.button onClick={goToChat} whileTap={{ scale: 0.97 }}
               className="w-full py-3 rounded-2xl border border-glacial-cyan/20 text-glacial-cyan
                 font-semibold text-sm flex items-center justify-center gap-2 mt-3">
-              <MessageCircle size={14} /> Написать {service.driver || service.host || 'партнёру'}
+              <MessageCircle size={14} /> {t.writeToPartner || 'Message Partner'}
             </motion.button>
           )}
         </>

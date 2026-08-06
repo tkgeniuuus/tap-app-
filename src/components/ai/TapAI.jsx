@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Sparkles, RotateCcw, Mic, MicOff, Volume2, VolumeX, Radio, Check, Globe } from 'lucide-react';
+import { useLang } from '../../context/LanguageContext';
+import { Send, Sparkles, RotateCcw, Mic, MicOff, Volume2, VolumeX, Radio, Globe } from 'lucide-react';
 
 /* ── Knowledge base ──────────────────────────────────────────── */
 const DESTINATIONS = {
@@ -199,7 +200,6 @@ Ready to book? I can find available transport and accommodation on TAP right now
   return `I'm TAP AI, ready to assist your Kazakhstan journey! 🌄\n\nYou can ask me by **typing or speaking by voice (гс / voice)**:\n• *"Plan a 3-day trip to Kolsai for 2 people"*\n• *"Best places to visit in summer"*\n• *"Budget trip for 4 people, 80,000 ₸"*\n\nWhere shall we explore? 🗺️`;
 }
 
-/* ── Clean text for Speech Synthesis ──────────────────────────── */
 function cleanTextForSpeech(md) {
   return md
     .replace(/## /g, '')
@@ -211,8 +211,8 @@ function cleanTextForSpeech(md) {
     .replace(/---\s*/g, '');
 }
 
-/* ── Message bubble ──────────────────────────────────────────── */
 function Bubble({ msg, onSpeak, speakingId }) {
+  const { t } = useLang();
   const isMe = msg.from === 'user';
   const isSpeaking = speakingId === msg.id;
 
@@ -237,7 +237,7 @@ function Bubble({ msg, onSpeak, speakingId }) {
         }`}>
           {msg.isVoice && (
             <div className="flex items-center gap-2 text-xs text-glacial-cyan font-bold mb-1 bg-glacial-cyan/10 px-2 py-0.5 rounded-lg w-fit">
-              <Radio size={13} className="animate-pulse text-glacial-cyan" /> Voice Message (ГС)
+              <Radio size={13} className="animate-pulse text-glacial-cyan" /> {t.voiceMsg || 'Voice Message (ГС)'}
             </div>
           )}
           <div dangerouslySetInnerHTML={{
@@ -257,10 +257,10 @@ function Bubble({ msg, onSpeak, speakingId }) {
               className={`text-xs px-2 py-0.5 rounded-full flex items-center gap-1 transition-colors ${
                 isSpeaking ? 'bg-glacial-cyan/20 text-glacial-cyan font-bold animate-pulse' : 'text-text-muted hover:text-white'
               }`}
-              title="Listen AI audio answer"
+              title="Listen AI voice answer"
             >
               {isSpeaking ? <VolumeX size={13} /> : <Volume2 size={13} />}
-              <span className="text-[10px]">{isSpeaking ? 'Stop Voice' : 'Listen Voice'}</span>
+              <span className="text-[10px]">{isSpeaking ? (t.stopVoice || 'Stop') : (t.listenVoice || 'Listen Voice')}</span>
             </button>
           )}
         </div>
@@ -293,6 +293,7 @@ const now = () => new Date().toLocaleTimeString('en', { hour: '2-digit', minute:
 
 /* ── Main TAP AI Component ───────────────────────────────────── */
 export default function TapAI() {
+  const { t } = useLang();
   const [messages, setMessages] = useState([
     {
       id: 0, from: 'ai', time: now(),
@@ -312,7 +313,6 @@ export default function TapAI() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, typing, isListening]);
 
-  // Setup Web Speech Recognition if supported
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
@@ -345,7 +345,6 @@ export default function TapAI() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
     if (!SpeechRecognition && !recognitionRef.current) {
-      // Fallback: Voice Recording simulation prompt for unsupported environments
       const simVoice = prompt("🎙️ TAP AI Voice Recorder (ГС):\nSpeak or enter your voice message query:", "Plan a 3-day Kolsai trip for 2 people");
       if (simVoice) {
         send(simVoice, true);
@@ -403,7 +402,6 @@ export default function TapAI() {
       const aiMsg = { id: ++msgId, from: 'ai', time: now(), text: reply };
       setMessages(prev => [...prev, aiMsg]);
 
-      // If spoken by voice, speak AI response back out loud
       if (isVoice) {
         speakMessage(aiMsg);
       }
@@ -423,7 +421,7 @@ export default function TapAI() {
   };
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden">
+    <div className="flex-1 flex flex-col overflow-hidden pb-[74px] relative">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-white/5 flex-shrink-0">
         <div className="flex items-center gap-2.5">
@@ -432,13 +430,12 @@ export default function TapAI() {
             <Sparkles size={17} className="text-white" />
           </div>
           <div>
-            <p className="text-white font-black text-sm">TAP AI</p>
-            <p className="text-glacial-cyan text-[10px]">Type & Voice AI Assistant (ГС)</p>
+            <p className="text-white font-black text-sm">{t.aiTitle || 'TAP AI'}</p>
+            <p className="text-glacial-cyan text-[10px]">{t.aiSub || 'Type & Voice AI Assistant (ГС)'}</p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Speech recognition language toggle */}
           <button
             onClick={() => setSpeechLang(l => l === 'en-US' ? 'ru-RU' : 'en-US')}
             className="flex items-center gap-1 text-[10px] bg-card-mid text-text-light px-2.5 py-1 rounded-xl
@@ -450,7 +447,8 @@ export default function TapAI() {
           </button>
 
           <motion.button onClick={reset} whileTap={{ scale: 0.88 }}
-            className="w-8 h-8 rounded-xl bg-card-mid flex items-center justify-center text-text-muted hover:text-white">
+            className="w-8 h-8 rounded-xl bg-card-mid flex items-center justify-center text-text-muted hover:text-white"
+            title={t.resetChat || "Reset Chat"}>
             <RotateCcw size={14} />
           </motion.button>
         </div>
@@ -459,7 +457,7 @@ export default function TapAI() {
       {/* Quick prompts */}
       {messages.length <= 1 && (
         <div className="px-4 pt-3 flex flex-col gap-2 flex-shrink-0">
-          <p className="text-text-muted text-xs font-semibold uppercase tracking-wide mb-1">Quick start prompts</p>
+          <p className="text-text-muted text-xs font-semibold uppercase tracking-wide mb-1">{t.quickStart || "Quick start prompts"}</p>
           {QUICK_PROMPTS.map(q => (
             <motion.button key={q.text} onClick={() => send(q.text)}
               whileTap={{ scale: 0.97 }}
@@ -485,7 +483,7 @@ export default function TapAI() {
           </motion.div>}
         </AnimatePresence>
 
-        {/* Recording active banner & animated soundwave */}
+        {/* Recording active banner */}
         <AnimatePresence>
           {isListening && (
             <motion.div
@@ -498,13 +496,13 @@ export default function TapAI() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between mb-1">
                   <p className="text-white text-xs font-black flex items-center gap-1.5">
-                    🎙️ Voice Recording (ГС)...
+                    🎙️ {t.transcribing || 'Voice Recording (ГС)...'}
                     <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
                   </p>
                   <span className="text-[10px] text-glacial-cyan font-bold uppercase">{speechLang.split('-')[0]}</span>
                 </div>
                 <p className="text-text-muted text-xs truncate italic">
-                  "{input || "Listening to your voice... Speak now into your mic"}"
+                  "{input || t.listening || "Listening to your voice... Speak now"}"
                 </p>
               </div>
               <button
@@ -521,8 +519,7 @@ export default function TapAI() {
       </div>
 
       {/* Input controls bar — TYPE OR TALK */}
-      <div className="px-3 py-3 border-t border-white/10 bg-card-dark flex items-center gap-2 flex-shrink-0 mb-[76px] relative z-20">
-        {/* Voice mic button for Voice Message / ГС */}
+      <div className="px-3 py-3 border-t border-white/10 bg-card-dark flex items-center gap-2 flex-shrink-0 z-30">
         <motion.button
           onClick={toggleListening}
           whileTap={{ scale: 0.85 }}
@@ -536,19 +533,17 @@ export default function TapAI() {
           {isListening ? <MicOff size={20} /> : <Mic size={20} />}
         </motion.button>
 
-        {/* Text typing field */}
         <div className="flex-1 flex items-center gap-2 bg-card-mid rounded-2xl px-4 py-2.5
           border border-white/8 focus-within:border-blazing-orange/40 transition-colors">
           <input
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(input.trim(), isListening); } }}
-            placeholder={isListening ? "Listening to voice..." : "Type text or press mic for voice (гс)..."}
+            placeholder={isListening ? (t.listening || "Listening...") : (t.aiPlaceholder || "Type text or press mic for voice (гс)...")}
             className="flex-1 bg-transparent text-white text-sm outline-none placeholder-text-muted min-w-0"
           />
         </div>
 
-        {/* Send message button */}
         <motion.button
           onClick={() => send(input.trim(), isListening)}
           disabled={!input.trim()}

@@ -1,34 +1,35 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useApp } from '../../context/AppContext';
+import { useLang } from '../../context/LanguageContext';
 import { MOCK_MARKET } from '../../data/mockData';
-import { ShoppingCart, Star, Plus, Minus, X, CheckCircle2, Search, SlidersHorizontal } from 'lucide-react';
+import { ShoppingCart, Star, Plus, Minus, X, CheckCircle2, Search } from 'lucide-react';
 
-const CATEGORIES = ['Все', 'Палатки', 'Рюкзаки', 'Спальники', 'Обувь', 'Навигация', 'Горелки', 'Одежда'];
+const CATEGORIES = ['All', 'Tents', 'Backpacks', 'Sleeping Bags', 'Footwear', 'Navigation', 'Stoves', 'Clothing'];
 
 const BADGE_STYLES = {
   TOP:     { bg: '#7C3AED22', color: '#A78BFA', label: '⭐ TOP'    },
   NEW:     { bg: '#10B98122', color: '#34D399', label: '✨ NEW'    },
-  POPULAR: { bg: '#0EA5E922', color: '#38BDF8', label: '🔥 ХИТ'   },
+  POPULAR: { bg: '#0EA5E922', color: '#38BDF8', label: '🔥 HOT'    },
 };
 
-// ─── Animated number ──────────────────────────────────────────
 function Price({ value }) {
   return <span>{value.toLocaleString('ru')} ₸</span>;
 }
 
 // ─── Cart Sheet ───────────────────────────────────────────────
 function CartSheet({ open, onClose }) {
+  const { t } = useLang();
   const { state, dispatch, showToast } = useApp();
   const cart  = state.cart || [];
   const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
 
   const checkout = () => {
     if (state.user.wallet < total) {
-      showToast('❌ Недостаточно средств на балансе', 'error'); return;
+      showToast(`❌ ${t.insufficientBalance || 'Insufficient balance'}`, 'error'); return;
     }
     dispatch({ type: 'CHECKOUT_CART' });
-    showToast('✅ Заказ оформлен! Снаряжение готовится к выдаче.');
+    showToast(`✅ ${t.checkoutSuccess || 'Order placed successfully!'}`);
     onClose();
   };
 
@@ -45,14 +46,14 @@ function CartSheet({ open, onClose }) {
       >
         <div className="w-10 h-1 bg-white/20 rounded-full mx-auto mt-4 mb-4 flex-shrink-0" />
         <div className="flex items-center justify-between px-5 mb-4 flex-shrink-0">
-          <h2 className="text-white font-black text-lg">🛒 Корзина</h2>
+          <h2 className="text-white font-black text-lg">🛒 {t.cart || 'Shopping Cart'}</h2>
           <button onClick={onClose}><X size={20} className="text-text-muted" /></button>
         </div>
 
         {cart.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center pb-10 text-text-muted">
             <span className="text-5xl mb-3">🛒</span>
-            <p className="text-sm">Корзина пуста</p>
+            <p className="text-sm">{t.cartEmpty || 'Cart is empty'}</p>
           </div>
         ) : (
           <>
@@ -86,11 +87,11 @@ function CartSheet({ open, onClose }) {
             {/* Summary */}
             <div className="px-5 pt-4 flex-shrink-0">
               <div className="flex justify-between mb-1">
-                <span className="text-text-muted text-sm">Товаров: {cart.reduce((s, i) => s + i.qty, 0)} шт.</span>
+                <span className="text-text-muted text-sm">{t.itemsCount || 'Items'}: {cart.reduce((s, i) => s + i.qty, 0)}</span>
                 <span className="text-white font-black text-lg"><Price value={total} /></span>
               </div>
               <div className="flex justify-between mb-4">
-                <span className="text-text-muted text-xs">Ваш баланс</span>
+                <span className="text-text-muted text-xs">{t.yourBalance || 'Your balance'}</span>
                 <span className={`text-xs font-semibold ${state.user.wallet >= total ? 'text-glacial-cyan' : 'text-red-400'}`}>
                   <Price value={state.user.wallet} />
                 </span>
@@ -100,7 +101,7 @@ function CartSheet({ open, onClose }) {
                 whileTap={{ scale: 0.97 }}
                 className="w-full py-4 rounded-2xl bg-blazing-orange text-white font-black text-base shadow-orange"
               >
-                ✅ Оформить заказ
+                ✅ {t.checkout || 'Complete Order'}
               </motion.button>
             </div>
           </>
@@ -112,6 +113,7 @@ function CartSheet({ open, onClose }) {
 
 // ─── Product Card ─────────────────────────────────────────────
 function ProductCard({ product, onAdd }) {
+  const { t } = useLang();
   const { state } = useApp();
   const cartItem  = state.cart?.find(i => i.productId === product.id);
   const inCart    = cartItem?.qty > 0;
@@ -123,7 +125,6 @@ function ProductCard({ product, onAdd }) {
       initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
       whileTap={{ scale: 0.98 }}
     >
-      {/* Product top */}
       <div className="flex items-start justify-between mb-3">
         <div className="w-14 h-14 rounded-2xl bg-card-light flex items-center justify-center text-3xl flex-shrink-0"
           style={{ boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.05)' }}>
@@ -136,11 +137,9 @@ function ProductCard({ product, onAdd }) {
         )}
       </div>
 
-      {/* Name + brand */}
       <p className="text-text-muted text-[10px] font-semibold uppercase tracking-wide mb-0.5">{product.brand}</p>
       <p className="text-white font-bold text-sm leading-snug mb-1">{product.name}</p>
 
-      {/* Rating + weight */}
       <div className="flex items-center gap-2 mb-2">
         <div className="flex items-center gap-0.5">
           <Star size={10} className="text-yellow-400 fill-yellow-400" />
@@ -150,16 +149,14 @@ function ProductCard({ product, onAdd }) {
           <span className="text-text-muted text-[10px]">· {product.weight}</span>
         )}
         <span className={`text-[10px] font-semibold ml-auto ${product.inStock > 0 ? 'text-green-400' : 'text-red-400'}`}>
-          {product.inStock > 0 ? `${product.inStock} в наличии` : 'Нет'}
+          {product.inStock > 0 ? `${product.inStock} ${t.inStock || 'in stock'}` : (t.outOfStock || 'Out of stock')}
         </span>
       </div>
 
-      {/* Price */}
       <p className="text-glacial-cyan font-black text-xl mb-3">
         <Price value={product.price} />
       </p>
 
-      {/* Add to cart */}
       <motion.button
         onClick={() => onAdd(product)}
         disabled={product.inStock === 0}
@@ -172,11 +169,11 @@ function ProductCard({ product, onAdd }) {
               : 'bg-blazing-orange text-white shadow-orange'}`}
       >
         {inCart ? (
-          <><CheckCircle2 size={15} /> В корзине ({cartItem.qty})</>
+          <><CheckCircle2 size={15} /> {t.inCart || 'In Cart'} ({cartItem.qty})</>
         ) : product.inStock === 0 ? (
-          'Нет в наличии'
+          t.outOfStock || 'Out of Stock'
         ) : (
-          <><Plus size={15} /> В корзину</>
+          <><Plus size={15} /> {t.addToCart || 'Add to Cart'}</>
         )}
       </motion.button>
     </motion.div>
@@ -185,8 +182,9 @@ function ProductCard({ product, onAdd }) {
 
 // ─── Main Market Tab ──────────────────────────────────────────
 export default function MarketTab() {
+  const { t } = useLang();
   const { state, dispatch, showToast } = useApp();
-  const [category, setCategory] = useState('Все');
+  const [category, setCategory] = useState('All');
   const [search,   setSearch]   = useState('');
   const [cartOpen, setCartOpen] = useState(false);
 
@@ -194,7 +192,7 @@ export default function MarketTab() {
 
   const products = useMemo(() => {
     let list = MOCK_MARKET;
-    if (category !== 'Все') list = list.filter(p => p.category === category);
+    if (category !== 'All' && category !== 'Все') list = list.filter(p => p.category === category || (category === 'All' && true));
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter(p => p.name.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q));
@@ -207,14 +205,12 @@ export default function MarketTab() {
       type: 'ADD_TO_CART',
       payload: { productId: product.id, name: product.name, price: product.price, emoji: product.emoji },
     });
-    showToast(`🛒 ${product.name} добавлен в корзину!`);
+    showToast(`🛒 ${product.name} ${t.addToCart || 'added to cart'}`);
   };
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
-      {/* Header */}
       <div className="px-4 pt-2 pb-3 flex-shrink-0">
-        {/* Search bar + cart button */}
         <div className="flex items-center gap-2 mb-3">
           <div className="flex-1 flex items-center gap-2 bg-card-dark rounded-2xl px-3 py-2.5
             border border-white/5 focus-within:border-glacial-cyan/40 transition-colors">
@@ -222,7 +218,7 @@ export default function MarketTab() {
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="Поиск снаряжения..."
+              placeholder={t.searchGear || "Search equipment & gear..."}
               className="flex-1 bg-transparent text-white text-sm outline-none placeholder-text-muted"
             />
             {search && (
@@ -249,7 +245,6 @@ export default function MarketTab() {
           </motion.button>
         </div>
 
-        {/* Category chips */}
         <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-1 px-1">
           {CATEGORIES.map(cat => (
             <motion.button
@@ -267,15 +262,13 @@ export default function MarketTab() {
         </div>
       </div>
 
-      {/* Product count */}
       <div className="px-4 mb-2 flex-shrink-0">
         <p className="text-text-muted text-xs">
-          {products.length} {products.length === 1 ? 'товар' : products.length < 5 ? 'товара' : 'товаров'}
-          {category !== 'Все' && ` · ${category}`}
+          {products.length} {t.itemsCount || 'items'}
+          {category !== 'All' && ` · ${category}`}
         </p>
       </div>
 
-      {/* Product grid */}
       <div className="flex-1 overflow-y-auto px-4 pb-24">
         <AnimatePresence mode="wait">
           <motion.div
@@ -297,12 +290,11 @@ export default function MarketTab() {
         {products.length === 0 && (
           <div className="flex flex-col items-center justify-center h-48 text-text-muted">
             <span className="text-4xl mb-3">🔍</span>
-            <p className="text-sm">Ничего не найдено</p>
+            <p className="text-sm">No items found</p>
           </div>
         )}
       </div>
 
-      {/* Cart sheet */}
       <AnimatePresence>
         {cartOpen && <CartSheet open={cartOpen} onClose={() => setCartOpen(false)} />}
       </AnimatePresence>
