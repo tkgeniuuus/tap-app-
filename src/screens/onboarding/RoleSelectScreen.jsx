@@ -1,152 +1,141 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useApp } from '../../context/AppContext';
-import { useLang } from '../../context/LanguageContext';
 import { ArrowLeft, ChevronRight, Check } from 'lucide-react';
 
 /* ================================================================
-   ALL PARTNER TYPES — grouped by category
-   Each type has: id, emoji, color, label, sub (EN/KK), desc, perks
+   ALL PARTNER TYPES — grouped by category (all text in English)
 ================================================================ */
 export const PARTNER_TYPE_MAP = {
-  // ── TRANSPORT ────────────────────────────────────────────────
   driver_4x4: {
     emoji: '🚙', color: '#FF5A00', category: 'transport',
-    label: '4×4 / Внедорожник',   sub: 'Off-road Driver',
-    desc:  'Горные маршруты, нацпарки, бездорожье. Toyota LC, UAZ, Delica.',
-    perks: ['Управление поездками', 'QR-сканер оплаты', 'Маршрутный календарь', 'GPS трек-шеринг'],
+    label: '4×4 / Off-Road',        sub: 'Off-road Driver',
+    desc:  'Mountain routes, national parks, off-road. Toyota LC, UAZ, Delica.',
+    perks: ['Trip management', 'QR payment scanner', 'Route calendar', 'GPS track sharing'],
   },
   driver_van: {
     emoji: '🚌', color: '#F97316', category: 'transport',
-    label: 'Минивэн / Автобус',   sub: 'Van / Bus',
-    desc:  'Групповые трансферы. Sprinter, Hiace, автобус до 45 мест.',
-    perks: ['Групповые брони', 'Онлайн-оплата', 'Маршруты', 'Статистика заполняемости'],
+    label: 'Van / Bus',              sub: 'Group Transfer',
+    desc:  'Group transfers. Sprinter, Hiace, bus up to 45 seats.',
+    perks: ['Group bookings', 'Online payments', 'Route builder', 'Occupancy stats'],
   },
   driver_moto: {
     emoji: '🏍️', color: '#EF4444', category: 'transport',
-    label: 'Мото / Квадроцикл',   sub: 'Moto / ATV',
-    desc:  'Экстрим-туры, горные тропы. Квадроциклы, эндуро, снегоходы.',
-    perks: ['Инструктаж онлайн', 'Прокат + тур', 'Трек-запись', 'Страховка'],
+    label: 'Moto / ATV',             sub: 'Extreme Tours',
+    desc:  'Extreme tours, mountain trails. ATVs, enduro bikes, snowmobiles.',
+    perks: ['Online briefing', 'Rental + tour', 'Track recording', 'Insurance'],
   },
   driver_water: {
     emoji: '🚤', color: '#0EA5E9', category: 'transport',
-    label: 'Водный транспорт',     sub: 'Water Transport',
-    desc:  'Алаколь, Балхаш — катер, яхта, гидроцикл, SUP-прокат.',
-    perks: ['Аренда по часам', 'Маршруты на воде', 'Аренда оборудования', 'Погода-интеграция'],
+    label: 'Water Transport',        sub: 'Boat / Jet-ski',
+    desc:  'Alakol, Balkhash — speedboat, yacht, jet-ski, SUP rental.',
+    perks: ['Hourly rentals', 'Water routes', 'Equipment rental', 'Weather integration'],
   },
-
-  // ── ACCOMMODATION ─────────────────────────────────────────────
   hotel: {
     emoji: '🏨', color: '#7C3AED', category: 'accommodation',
-    label: 'Гостиница / Отель',    sub: 'Hotel',
-    desc:  'Стационарное размещение, номерной фонд, ресепшн.',
-    perks: ['Управление номерами', 'Online-бронирование', 'Динамическое ценообразование', 'Отзывы'],
+    label: 'Hotel',                  sub: 'Hotel / Resort',
+    desc:  'Full-service accommodation, room management, reception.',
+    perks: ['Room management', 'Online booking', 'Dynamic pricing', 'Reviews'],
   },
   hostel: {
     emoji: '🏠', color: '#8B5CF6', category: 'accommodation',
-    label: 'Хостел / Гостевой дом', sub: 'Hostel / Guesthouse',
-    desc:  'Бюджетное размещение, спальные места, общая кухня.',
-    perks: ['Бронь спальных мест', 'Заполняемость', 'Фотогалерея', 'Чек-ин / Чек-аут'],
+    label: 'Hostel / Guesthouse',    sub: 'Budget Stay',
+    desc:  'Budget accommodation, dormitory beds, shared kitchen.',
+    perks: ['Bed reservations', 'Occupancy tracking', 'Photo gallery', 'Check-in / Check-out'],
   },
   yurt: {
     emoji: '⛺', color: '#10B981', category: 'accommodation',
-    label: 'Юрточный лагерь',      sub: 'Yurt Camp',
-    desc:  'Аутентичный отдых — юрты, национальная кухня, степь / горы.',
-    perks: ['Сезонное расписание', 'Пакетные туры', 'Культурная программа', 'Питание'],
+    label: 'Yurt Camp',              sub: 'Traditional Stay',
+    desc:  'Authentic experience — yurts, national cuisine, steppe / mountains.',
+    perks: ['Seasonal schedule', 'Package tours', 'Cultural program', 'Meals included'],
   },
   camping: {
     emoji: '🔥', color: '#F59E0B', category: 'accommodation',
-    label: 'Кемпинг / Glamping',   sub: 'Camping / Glamping',
-    desc:  'Оборудованные стоянки, домики, шатры, глэмпинг.',
-    perks: ['Карта мест на сайте', 'Посуточная аренда', 'Доп. услуги', 'Инвентарь'],
+    label: 'Camping / Glamping',     sub: 'Outdoor Stay',
+    desc:  'Equipped campsites, cabins, tents, glamping pods.',
+    perks: ['Site map', 'Per-night rental', 'Add-on services', 'Equipment'],
   },
-
-  // ── FOOD & DRINK ──────────────────────────────────────────────
   restaurant: {
     emoji: '🍽️', color: '#DC2626', category: 'food',
-    label: 'Ресторан / Кафе',      sub: 'Restaurant / Café',
-    desc:  'Туристическое питание, банкеты, национальная кухня.',
-    perks: ['Меню-конструктор', 'Банкет под заказ', 'Онлайн-столик', 'Доставка'],
+    label: 'Restaurant / Café',      sub: 'Dining',
+    desc:  'Tourist dining, banquets, national cuisine.',
+    perks: ['Menu builder', 'Event catering', 'Table booking', 'Delivery'],
   },
   bbq: {
     emoji: '🥩', color: '#B45309', category: 'food',
-    label: 'Шашлычная / Мангал',   sub: 'BBQ / Grill',
-    desc:  'Зоны отдыха у природы, мясо на углях, кумыс.',
-    perks: ['Аренда зоны', 'Пакет "Природа"', 'Доставка углей/дров', 'Вмещаемость'],
+    label: 'BBQ / Grill',            sub: 'Outdoor Grill',
+    desc:  'Nature rest zones, charcoal grill, kumis.',
+    perks: ['Zone rental', '"Nature" packages', 'Charcoal delivery', 'Capacity management'],
   },
   tea: {
     emoji: '☕', color: '#92400E', category: 'food',
-    label: 'Чайхана / Кофейня',    sub: 'Teahouse / Coffee',
-    desc:  'Чай, кофе, выпечка, чайные церемонии.',
-    perks: ['Сессии чая', 'Вайфай-зона', 'Мерч', 'Лояльность'],
+    label: 'Teahouse / Coffee',      sub: 'Beverages',
+    desc:  'Tea, coffee, pastries, tea ceremonies.',
+    perks: ['Tea sessions', 'WiFi zone', 'Merch', 'Loyalty program'],
   },
-
-  // ── ACTIVITIES ────────────────────────────────────────────────
   tourzone: {
     emoji: '🏞️', color: '#059669', category: 'activity',
-    label: 'Тур-зона / Нацпарк',   sub: 'Tour Zone / Park',
-    desc:  'Вход в тур-зону, маршруты, экскурсии, сборы.',
-    perks: ['Электронные билеты', 'Карта маршрутов', 'Управление входом', 'Экскурс-расписание'],
+    label: 'Tour Zone / Park',       sub: 'National Park',
+    desc:  'Park entry, routes, excursions, entry fees.',
+    perks: ['E-tickets', 'Route map', 'Gate management', 'Tour schedule'],
   },
   guide: {
     emoji: '🎯', color: '#0891B2', category: 'activity',
-    label: 'Туристический гид',    sub: 'Tour Guide',
-    desc:  'Пешие, конные, автомобильные туры. Сертифицированный гид.',
-    perks: ['Расписание туров', 'Онлайн-запись', 'Мультиязычность', 'Профиль гида'],
+    label: 'Tour Guide',             sub: 'Certified Guide',
+    desc:  'Hiking, horse, and car tours. Certified multilingual guide.',
+    perks: ['Tour schedule', 'Online booking', 'Multi-language', 'Guide profile'],
   },
   photo: {
     emoji: '📸', color: '#7C3AED', category: 'activity',
-    label: 'Фотограф / Видеограф', sub: 'Photographer',
-    desc:  'Тревел-съёмка, фотосессии на природе, аэросъёмка.',
-    perks: ['Портфолио', 'Онлайн-запись', 'Пакеты съёмки', 'Быстрая доставка фото'],
+    label: 'Photographer',           sub: 'Travel Photography',
+    desc:  'Travel shoots, nature sessions, drone footage.',
+    perks: ['Portfolio', 'Online booking', 'Shoot packages', 'Fast delivery'],
   },
   horse: {
     emoji: '🐴', color: '#78350F', category: 'activity',
-    label: 'Конный туризм',        sub: 'Horse Trekking',
-    desc:  'Конные прогулки, треккинг, аренда лошадей.',
-    perks: ['Уровни маршрутов', 'Инструктаж', 'Снаряжение', 'Страховка лошади'],
+    label: 'Horse Trekking',         sub: 'Equestrian',
+    desc:  'Horse rides, trekking, horse rental.',
+    perks: ['Route levels', 'Instruction', 'Gear', 'Horse insurance'],
   },
   water_sport: {
     emoji: '🏄', color: '#0284C7', category: 'activity',
-    label: 'Водные активности',    sub: 'Water Sports',
-    desc:  'SUP, кайтинг, рыбалка, ныряние на Алаколе и Балхаше.',
-    perks: ['Прокат оборудования', 'Обучение', 'Тур по озёрам', 'Прогноз ветра'],
+    label: 'Water Sports',           sub: 'Water Activities',
+    desc:  'SUP, kite surfing, fishing, diving on Alakol & Balkhash.',
+    perks: ['Equipment rental', 'Lessons', 'Lake tours', 'Wind forecast'],
   },
-
-  // ── SHOPS ─────────────────────────────────────────────────────
   gear_shop: {
     emoji: '🏪', color: '#1D4ED8', category: 'shop',
-    label: 'Магазин снаряжения',   sub: 'Gear Shop',
-    desc:  'Продажа туристического оборудования, одежды, обуви.',
-    perks: ['Каталог товаров', 'Онлайн-продажа', 'QR-выдача', 'Инвентаризация'],
+    label: 'Gear Shop',              sub: 'Equipment Store',
+    desc:  'Selling tourist gear, clothing, footwear.',
+    perks: ['Product catalog', 'Online sales', 'QR issue', 'Inventory'],
   },
   rental: {
     emoji: '🔧', color: '#4338CA', category: 'shop',
-    label: 'Прокат оборудования',  sub: 'Rental',
-    desc:  'Аренда палаток, рюкзаков, спальников, снаряжения.',
-    perks: ['Управление прокатом', 'Залоговая система', 'QR-выдача/приёмка', 'Инвентарь'],
+    label: 'Equipment Rental',       sub: 'Rental Service',
+    desc:  'Renting tents, backpacks, sleeping bags, gear.',
+    perks: ['Rental management', 'Deposit system', 'QR issue/return', 'Inventory'],
   },
   souvenir: {
     emoji: '🎁', color: '#BE185D', category: 'shop',
-    label: 'Сувенирная лавка',     sub: 'Souvenir Shop',
-    desc:  'Казахская продукция, сувениры, hand-made изделия.',
-    perks: ['Витрина онлайн', 'Доставка', 'QR-метки', 'Рекомендации ИИ'],
+    label: 'Souvenir Shop',          sub: 'Gifts & Crafts',
+    desc:  'Kazakh products, souvenirs, handmade items.',
+    perks: ['Online storefront', 'Delivery', 'QR labels', 'AI recommendations'],
   },
 };
 
 const CATEGORIES = [
-  { id: 'transport',     emoji: '🚗', label: 'Транспорт'    },
-  { id: 'accommodation', emoji: '🏨', label: 'Размещение'   },
-  { id: 'food',          emoji: '🍽️', label: 'Еда и напитки'},
-  { id: 'activity',      emoji: '🎯', label: 'Активности'   },
-  { id: 'shop',          emoji: '🛒', label: 'Магазины'     },
+  { id: 'transport',     emoji: '🚗', label: 'Transport'      },
+  { id: 'accommodation', emoji: '🏨', label: 'Accommodation'  },
+  { id: 'food',          emoji: '🍽️', label: 'Food & Drinks'  },
+  { id: 'activity',      emoji: '🎯', label: 'Activities'     },
+  { id: 'shop',          emoji: '🛒', label: 'Shops'          },
 ];
 
 const container = {
   hidden: {},
   show: { transition: { staggerChildren: 0.055 } },
 };
-const item = {
+const cardItem = {
   hidden: { opacity: 0, y: 20, scale: 0.96 },
   show:   { opacity: 1, y: 0,  scale: 1, transition: { type: 'spring', stiffness: 280, damping: 22 } },
 };
@@ -156,14 +145,14 @@ function StepRole({ onSelect }) {
   const choices = [
     {
       id: 'tourist', emoji: '🏕️', color: '#00E5FF',
-      title: 'Турист',   titleKK: 'Турист · Tourist',
-      desc: 'Бронируй поездки, жильё и снаряжение. Общайся с туристами и партнёрами.',
+      title: 'Tourist',   sub: 'Турист · Tourist',
+      desc:  'Book trips, housing and gear. Chat with fellow travellers and partners.',
       badge: 'B2C',
     },
     {
       id: 'partner', emoji: '💼', color: '#FF5A00',
-      title: 'Партнёр',  titleKK: 'Серіктес · Partner',
-      desc: 'Размести своё дело в TAP. Принимай заказы, управляй финансами.',
+      title: 'Partner',   sub: 'Серіктес · Partner',
+      desc:  'List your business on TAP. Accept bookings, manage your finances.',
       badge: 'B2B',
     },
   ];
@@ -171,19 +160,19 @@ function StepRole({ onSelect }) {
   return (
     <div className="flex-1 flex flex-col px-5 pt-4 pb-10 gap-4 overflow-y-auto">
       <div className="mb-2">
-        <h1 className="text-white font-black text-2xl">Добро пожаловать в TAP 👋</h1>
-        <p className="text-text-muted text-sm mt-1">Выберите роль, чтобы начать</p>
+        <h1 className="text-white font-black text-2xl">Welcome to TAP 👋</h1>
+        <p className="text-text-muted text-sm mt-1">Choose your role to get started</p>
       </div>
-      {choices.map(c => (
+
+      {choices.map((c, idx) => (
         <motion.button key={c.id} onClick={() => onSelect(c.id)}
-          className="relative rounded-[28px] p-6 text-left overflow-hidden border border-white/5
-            bg-card-dark flex flex-col gap-3"
+          className="relative rounded-[28px] p-6 text-left overflow-hidden
+            border border-white/5 bg-card-dark flex flex-col gap-3"
           style={{ boxShadow: `0 8px 40px ${c.color}14` }}
           whileTap={{ scale: 0.97 }}
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: choices.indexOf(c) * 0.1 }}
+          transition={{ delay: idx * 0.1 }}
         >
-          {/* Glow */}
           <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full blur-3xl opacity-20"
             style={{ background: c.color }} />
 
@@ -200,13 +189,13 @@ function StepRole({ onSelect }) {
 
           <div className="relative z-10">
             <p className="text-white font-black text-xl leading-tight">{c.title}</p>
-            <p className="text-white/35 text-xs">{c.titleKK}</p>
+            <p className="text-white/35 text-xs">{c.sub}</p>
           </div>
 
           <p className="text-text-muted text-sm leading-relaxed relative z-10">{c.desc}</p>
 
           <div className="flex items-center gap-1 relative z-10" style={{ color: c.color }}>
-            <span className="text-xs font-bold">Выбрать</span>
+            <span className="text-xs font-bold">Select</span>
             <ChevronRight size={14} />
           </div>
         </motion.button>
@@ -218,23 +207,20 @@ function StepRole({ onSelect }) {
 /* ── Step 2: Category filter + type grid ────────────────────── */
 function StepPartnerType({ onSelect, onBack }) {
   const [activeCategory, setActiveCategory] = useState('transport');
-
-  const types = Object.entries(PARTNER_TYPE_MAP)
-    .filter(([, v]) => v.category === activeCategory);
+  const types = Object.entries(PARTNER_TYPE_MAP).filter(([, v]) => v.category === activeCategory);
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
-      {/* Header */}
       <div className="px-5 pt-4 pb-3 flex-shrink-0">
-        <button onClick={onBack} className="flex items-center gap-2 text-text-muted mb-3 active:scale-95 transition-transform">
+        <button onClick={onBack}
+          className="flex items-center gap-2 text-text-muted mb-3 active:scale-95 transition-transform">
           <ArrowLeft size={18} />
-          <span className="text-sm">Назад</span>
+          <span className="text-sm">Back</span>
         </button>
-        <h2 className="text-white font-black text-xl">Тип вашего бизнеса</h2>
-        <p className="text-text-muted text-xs mt-0.5">Это настроит личный кабинет под ваши задачи</p>
+        <h2 className="text-white font-black text-xl">Your business type</h2>
+        <p className="text-text-muted text-xs mt-0.5">This will configure your personal dashboard</p>
       </div>
 
-      {/* Category tabs */}
       <div className="flex gap-2 px-5 pb-3 overflow-x-auto scrollbar-hide flex-shrink-0">
         {CATEGORIES.map(cat => (
           <motion.button key={cat.id} onClick={() => setActiveCategory(cat.id)}
@@ -250,26 +236,20 @@ function StepPartnerType({ onSelect, onBack }) {
         ))}
       </div>
 
-      {/* Type cards grid */}
       <div className="flex-1 overflow-y-auto px-5 pb-10">
         <AnimatePresence mode="wait">
-          <motion.div key={activeCategory}
-            className="grid grid-cols-1 gap-3"
+          <motion.div key={activeCategory} className="grid grid-cols-1 gap-3"
             variants={container} initial="hidden" animate="show">
             {types.map(([typeId, pt]) => (
-              <motion.button key={typeId} variants={item} onClick={() => onSelect(typeId)}
+              <motion.button key={typeId} variants={cardItem} onClick={() => onSelect(typeId)}
                 className="bg-card-dark rounded-[22px] p-4 border border-white/5 text-left
                   flex items-start gap-3 active:scale-[0.98] transition-all group"
                 style={{ boxShadow: `0 4px 20px ${pt.color}0A` }}
-                whileTap={{ scale: 0.97 }}
-              >
-                {/* Icon */}
+                whileTap={{ scale: 0.97 }}>
                 <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0"
                   style={{ background: `${pt.color}18` }}>
                   {pt.emoji}
                 </div>
-
-                {/* Content */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
                     <p className="text-white font-bold text-sm">{pt.label}</p>
@@ -281,19 +261,15 @@ function StepPartnerType({ onSelect, onBack }) {
                   <p className="text-text-muted text-xs mb-2 leading-snug">{pt.desc}</p>
                   <div className="flex flex-wrap gap-1">
                     {pt.perks.slice(0, 3).map(p => (
-                      <span key={p} className="text-[9px] bg-card-light text-text-muted px-2 py-0.5 rounded-full">
-                        {p}
-                      </span>
+                      <span key={p} className="text-[9px] bg-card-light text-text-muted px-2 py-0.5 rounded-full">{p}</span>
                     ))}
                     {pt.perks.length > 3 && (
                       <span className="text-[9px] text-text-muted px-1">+{pt.perks.length - 3}</span>
                     )}
                   </div>
                 </div>
-
-                {/* Arrow */}
                 <ChevronRight size={18} className="text-text-muted flex-shrink-0 mt-0.5
-                  group-hover:translate-x-0.5 group-hover:text-white transition-all" />
+                  group-hover:text-white transition-all" />
               </motion.button>
             ))}
           </motion.div>
@@ -310,17 +286,15 @@ function StepConfirm({ typeId, onConfirm, onBack }) {
 
   return (
     <div className="flex-1 flex flex-col px-5 pt-4 pb-10 overflow-y-auto">
-      <button onClick={onBack} className="flex items-center gap-2 text-text-muted mb-4 active:scale-95 transition-transform">
+      <button onClick={onBack}
+        className="flex items-center gap-2 text-text-muted mb-4 active:scale-95 transition-transform">
         <ArrowLeft size={18} />
-        <span className="text-sm">Назад</span>
+        <span className="text-sm">Back</span>
       </button>
 
-      {/* Big type card */}
-      <motion.div
-        className="rounded-[28px] p-6 mb-5 border border-white/5"
+      <motion.div className="rounded-[28px] p-6 mb-5 border"
         style={{ background: `${pt.color}10`, borderColor: `${pt.color}30` }}
-        initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-      >
+        initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
         <div className="flex items-center gap-3 mb-4">
           <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-4xl"
             style={{ background: `${pt.color}20` }}>
@@ -333,9 +307,7 @@ function StepConfirm({ typeId, onConfirm, onBack }) {
         </div>
         <p className="text-text-muted text-sm leading-relaxed mb-4">{pt.desc}</p>
         <div className="border-t pb-4" style={{ borderColor: `${pt.color}25` }} />
-        <p className="text-text-muted text-xs font-semibold uppercase tracking-wide mb-3">
-          Что вы получаете:
-        </p>
+        <p className="text-text-muted text-xs font-semibold uppercase tracking-wide mb-3">What you get:</p>
         <div className="space-y-2">
           {pt.perks.map(p => (
             <div key={p} className="flex items-center gap-2">
@@ -349,19 +321,18 @@ function StepConfirm({ typeId, onConfirm, onBack }) {
         </div>
       </motion.div>
 
-      {/* TAP commission info */}
       <div className="bg-card-dark rounded-2xl p-4 mb-5 border border-white/5">
-        <p className="text-white font-bold text-sm mb-2">💰 Комиссия TAP</p>
+        <p className="text-white font-bold text-sm mb-2">💰 TAP Commission</p>
         <div className="flex justify-between mb-1">
-          <span className="text-text-muted text-xs">С каждой транзакции</span>
+          <span className="text-text-muted text-xs">Per transaction</span>
           <span className="text-glacial-cyan font-black text-sm">10%</span>
         </div>
         <div className="flex justify-between">
-          <span className="text-text-muted text-xs">Вам</span>
+          <span className="text-text-muted text-xs">You keep</span>
           <span className="text-white font-bold text-sm">90%</span>
         </div>
         <p className="text-text-muted text-[10px] mt-2">
-          Первые 30 дней — без комиссии. Выплаты через Kaspi Pay.
+          First 30 days — no commission. Payouts via Kaspi Pay.
         </p>
       </div>
 
@@ -372,17 +343,17 @@ function StepConfirm({ typeId, onConfirm, onBack }) {
           background: `linear-gradient(135deg, ${pt.color}, ${pt.color}cc)`,
           boxShadow: `0 8px 32px ${pt.color}40`,
         }}>
-        {pt.emoji} Начать как «{pt.label}»
+        {pt.emoji} Start as "{pt.label}"
       </motion.button>
     </div>
   );
 }
 
-/* ── Root RoleSelectScreen ───────────────────────────────────── */
+/* ── Root ───────────────────────────────────────────────────── */
 export default function RoleSelectScreen() {
   const { dispatch } = useApp();
-  const [step,     setStep]     = useState('role');          // role | partnerType | confirm
-  const [typeId,   setTypeId]   = useState(null);
+  const [step,   setStep]   = useState('role');
+  const [typeId, setTypeId] = useState(null);
 
   const pickRole = (roleId) => {
     if (roleId === 'tourist') {
@@ -393,10 +364,7 @@ export default function RoleSelectScreen() {
     }
   };
 
-  const pickType = (id) => {
-    setTypeId(id);
-    setStep('confirm');
-  };
+  const pickType = (id) => { setTypeId(id); setStep('confirm'); };
 
   const confirm = () => {
     dispatch({ type: 'SET_PARTNER_TYPE', payload: typeId });

@@ -220,6 +220,10 @@ function reducer(state, action) {
       return { ...state, cart: [], user: { ...state.user, wallet: state.user.wallet - total } };
     }
 
+    // ── Custom tours ───────────────────────────────────────────
+    case 'ADD_CUSTOM_TOUR':
+      return { ...state, services: [action.payload, ...state.services] };
+
     // ── Toast ─────────────────────────────────────────────────
     case 'SHOW_TOAST': return { ...state, toast: action.payload };
     case 'HIDE_TOAST':  return { ...state, toast: null };
