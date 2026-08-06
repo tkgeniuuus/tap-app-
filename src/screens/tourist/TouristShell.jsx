@@ -69,7 +69,6 @@ export default function TouristShell() {
           </div>
           <div>
             <span className="text-white font-black text-lg">TAP</span>
-            <span className="text-text-muted text-xs ml-1.5">Zhetysu</span>
           </div>
         </div>
 
