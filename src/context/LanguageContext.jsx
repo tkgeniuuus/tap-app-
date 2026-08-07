@@ -14,7 +14,7 @@ const LanguageContext = createContext(null);
 
 export function LanguageProvider({ children }) {
   const [lang, setLang] = useState(
-    () => localStorage.getItem('tap_language') || 'en'
+    () => localStorage.getItem('tap_language') || 'ru'
   );
 
   const changeLang = (code) => {
